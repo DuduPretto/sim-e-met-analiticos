@@ -26,7 +26,7 @@ y = numerosAleatorios
 
 # Criando o gráfico de dispersão
 plt.scatter(x, y, alpha=0.5)
-plt.title('Dispersão de Números Pseudo-Aleatórios')
-plt.xlabel('Índice')
-plt.ylabel('Número Pseudo-Aleatório')
+plt.title('Dispersão dos números pseudo-aleatórios')
+plt.xlabel('')
+plt.ylabel('')
 plt.show()
