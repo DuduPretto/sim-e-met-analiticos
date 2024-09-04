@@ -6,14 +6,19 @@ class GeradorCongruenteLinear:
         self.c = 1013904223
         self.M = 4294967296
         self.ultimoNumero = semente
+        self.counter = 0
 
     def geraPseudoAleatorio(self):
+        if self.counter >= 100000:
+            raise StopIteration("Limite de 100.000 números aleatórios alcançado.")
+        
         self.ultimoNumero = (self.ultimoNumero * self.a + self.c) % self.M
+        self.counter += 1  # Incrementa o contador
         return self.ultimoNumero / self.M
 
 # Usage
-semente = 1  # Initial seed for the generator
-gerador = GeradorCongruenteLinear(semente)
+# semente = 1  # Initial seed for the generator
+# gerador = GeradorCongruenteLinear(semente)
 # numerosAleatorios = []
 
 # # Gerando números

@@ -1,14 +1,13 @@
 class Fila:
     def __init__(self, capacity: int, servers: int, arrivalInterval: tuple, serviceInterval: tuple):
-        self.currentStatus = 0
+        self.status = 0
         self.capacity = capacity
         self.servers = servers
         self.arrivalInterval = arrivalInterval
         self.serviceInterval = serviceInterval
         self.losses = 0
-        self.accumulator = []
-        for i in range(self.accumulator): # testar se não ta criando com uma posição a mais
-            self.accumulator.append(0)
+        self.accumulator = [0] * (capacity + 1)
+       
 
     def enter(self):
         self.status += 1
