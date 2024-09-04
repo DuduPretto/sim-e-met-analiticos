@@ -23,13 +23,13 @@ class Simulador:
         if self.fila.status < self.fila.capacity:
             self.fila.enter()
             if self.fila.status <= self.fila.servers:
-                self.escalonador.add(Evento(self.tempo_global + self.saida()))
+                self.escalonador.add(t0= self.fila.serviceInterval[0], t1= self.fila.serviceInterval[1], globalTime= self.tempo_global, tipo= "saida")
         else:
             self.fila.loss()
-        self.escalonador.add(Evento(self.tempo_global + self.chegada()))
+        self.escalonador.add(t0= self.fila.arrivalInterval[0], t1= self.fila.arrivalInterval[1], globalTime= self.tempo_global, tipo= "chegada")
 
     def saida(self, evento):
         # acumula tempo
         self.fila.out()
         if self.fila.status >= self.fila.servers:
-            self.escalonador.add(Evento(self.tempo_global + self.saida()))
+            self.escalonador.add(t0= self.fila.serviceInterval[0], t1= self.fila.serviceInterval[1], globalTime= self.tempo_global, tipo= "saida")
