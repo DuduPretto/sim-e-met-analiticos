@@ -1,7 +1,7 @@
 from Simulador import Simulador
 from Fila import Fila
 
-capacity = 2  
+capacity = 5  
 servers = 2 
 arrival_interval = (2, 5)
 service_interval = (3, 5)

@@ -30,7 +30,7 @@ class Simulador:
     def exibirResultados(self):
         total = 0
         for i, tempo in enumerate(self.fila.accumulator):
-            print(f"Estado {i}: {tempo} unidades de tempo")
+            print(f"Estado {i}: {tempo} unidades de tempo ---  {tempo/self.tempo_global * 100}%")
             total += tempo
         print(f"Acumulado total: {total} ")    
         print(f"Número total de perdas: {self.fila.losses}")
