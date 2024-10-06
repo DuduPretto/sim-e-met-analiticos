@@ -7,7 +7,7 @@ class Simulador:
     def __init__(self):
         self.tempo_global = 0
         self.escalonador = Escalonador()
-        # self.fila1 = Fila(5, servers, (2, 5), (3, 5))  
+        self.filas = []
         self.eventCount = 0
 
         self.escalonador.add(t0=2.0, t1=2.0, globalTime=0, tipo="chegada")
@@ -16,7 +16,7 @@ class Simulador:
         try:
             while True: 
                 evento = self.escalonador.get()
-                
+
                 if evento.type == 'chegada':
                     self.chegada(evento)
                     self.tempo_global = evento.time
@@ -28,10 +28,9 @@ class Simulador:
                     self.tempo_global = evento.time
         except StopIteration as e:
             print(e)
-            print("\nFila 1 ---------------")
-            self.exibirResultados(self.fila1)
-            print("\nFila 2 ---------------")
-            self.exibirResultados(self.fila2)
+            for fila in self.filas:
+                print(f"\nResultados da fila {self.filas.index(fila)}:")
+                self.exibirResultados(fila)
 
     def exibirResultados(self, fila):
         total = 0
@@ -44,36 +43,43 @@ class Simulador:
     
     def chegada(self, evento):
         self.acumulaTempo(evento)
-       
-        if self.fila1.status < self.fila1.capacity:
-            self.fila1.enter()
-            if self.fila1.status <= self.fila1.servers:
-                self.escalonador.add(t0=self.fila1.serviceInterval[0], t1=self.fila1.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem")
+        fila = self.filas[0]
+        if fila.status < fila.capacity:
+            fila.enter()
+            if fila.status <= fila.servers:
+                self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino=self.filas[1])
         else:
-            self.fila1.loss()
-        self.escalonador.add(t0=self.fila1.arrivalInterval[0], t1=self.fila1.arrivalInterval[1], globalTime=self.tempo_global, tipo="chegada")
+            fila.loss()
+        self.escalonador.add(t0=fila.arrivalInterval[0], t1=fila.arrivalInterval[1], globalTime=self.tempo_global, tipo="chegada")
 
     def saida(self, evento):
         self.acumulaTempo(evento)
-        
-        self.fila2.out()
-        if self.fila2.status >= self.fila2.servers:
-            self.escalonador.add(t0=self.fila2.serviceInterval[0], t1=self.fila2.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+        fila = self.filas[-1]
+        fila.out()
+        if fila.status >= fila.servers:
+            self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
 
     def passagem(self, evento):
         self.acumulaTempo(evento)
-        
-        self.fila1.out()
-        if self.fila1.status >= self.fila1.servers:
-            self.escalonador.add(t0=self.fila1.serviceInterval[0], t1=self.fila1.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem")
 
-        if self.fila2.status < self.fila2.capacity:
-            self.fila2.enter()
-            if self.fila2.status <= self.fila2.servers:
-                self.escalonador.add(t0=self.fila2.serviceInterval[0], t1=self.fila2.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+        origem = evento.filaOrigem
+        destino = evento.filaDestino
+        
+        origem.out()
+        if origem.status >= origem.servers:
+            self.escalonador.add(t0=origem.serviceInterval[0], t1=origem.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=origem, filaDestino=destino)
+
+        if destino.status < destino.capacity:
+            destino.enter()
+            
+            if destino == self.filas[-1]:
+                if destino.status <= destino.servers:
+                    self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+            elif destino.status <= destino.servers:
+                self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=destino, filaDestino=self.filas[self.filas.index(destino) + 1])
         else:
-            self.fila2.loss()
+            destino.loss()
 
     def acumulaTempo(self, evento):
-        self.fila1.accumulator[self.fila1.status] += (evento.time - self.tempo_global)
-        self.fila2.accumulator[self.fila2.status] += (evento.time - self.tempo_global)
+        for fila in self.filas:
+            fila.accumulator[fila.status] += (evento.time - self.tempo_global)
