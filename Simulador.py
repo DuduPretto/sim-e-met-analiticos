@@ -46,7 +46,10 @@ class Simulador:
         fila = self.filas[0]
         if fila.status < fila.capacity:
             fila.enter()
-            if fila.status <= fila.servers:
+            if len(self.filas) == 1:
+                if fila.status <= fila.servers:
+                    self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+            elif fila.status <= fila.servers:
                 self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino=self.filas[1])
         else:
             fila.loss()
@@ -71,7 +74,7 @@ class Simulador:
 
         if destino.status < destino.capacity:
             destino.enter()
-            
+
             if destino == self.filas[-1]:
                 if destino.status <= destino.servers:
                     self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
