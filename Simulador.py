@@ -74,7 +74,7 @@ class Simulador:
         fila = evento.filaOrigem
         fila.out()
         if fila.status >= fila.servers:
-            self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+            self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida", filaOrigem=fila)
 
     def passagem(self, evento):
         self.acumulaTempo(evento)
