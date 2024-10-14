@@ -4,13 +4,13 @@ from Escalonador import *
 from Fila import *
 
 class Simulador:
-    def __init__(self):
+    def __init__(self, filas, networkConnections, initialTime):
         self.tempo_global = 0
         self.escalonador = Escalonador()
-        self.filas = []
+        self.filas = filas 
         self.eventCount = 0
-
-        self.escalonador.add(t0=2.0, t1=2.0, globalTime=0, tipo="chegada")
+        self.networkConnections = networkConnections  
+        self.escalonador.add(t0=initialTime, t1=initialTime, globalTime=0, tipo="chegada")
     
     def run(self):
         try:
@@ -46,11 +46,26 @@ class Simulador:
         fila = self.filas[0]
         if fila.status < fila.capacity:
             fila.enter()
-            if len(self.filas) == 1:
-                if fila.status <= fila.servers:
-                    self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
-            elif fila.status <= fila.servers:
-                self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino=self.filas[1])
+
+            # Parte nova
+            aleatorio = self.escalonador.retornaAleatorio()
+
+            probabilidadesRoteamento = self.networkConnections[fila.queueName]
+
+            nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
+
+            filaDeDestino = next((queue for queue in self.filas if queue['queueName'] == nomeFilaDestino), None)
+
+            if(nomeFilaDestino == -1):
+                self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+            else:
+                self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino = filaDeDestino)
+
+            # if len(self.filas) == 1:
+            #     if fila.status <= fila.servers:
+            #         self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+            # elif fila.status <= fila.servers:
+            #     self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino=self.filas[1])
         else:
             fila.loss()
         self.escalonador.add(t0=fila.arrivalInterval[0], t1=fila.arrivalInterval[1], globalTime=self.tempo_global, tipo="chegada")
@@ -86,3 +101,13 @@ class Simulador:
     def acumulaTempo(self, evento):
         for fila in self.filas:
             fila.accumulator[fila.status] += (evento.time - self.tempo_global)
+
+    def defineDestino(probabilidades, aleatorio):
+        cumulativo = 0  
+        for chave, valor in probabilidades.items():
+            cumulativo += valor
+            if aleatorio < cumulativo:
+                if chave == "exit":
+                    return -1
+                else:
+                    return chave

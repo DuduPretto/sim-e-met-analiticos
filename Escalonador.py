@@ -15,3 +15,6 @@ class Escalonador:
     
     def get(self):
         return self.events.pop(0)
+    
+    def retornaAleatorio(self):
+        return self.gerador.geraPseudoAleatorio()
