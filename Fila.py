@@ -7,8 +7,8 @@ class Fila:
         self.arrivalInterval = arrivalInterval
         self.serviceInterval = serviceInterval
         self.losses = 0
-        if capacity is None:
-            self.accumulator = []  # Start with an empty list if infinite capacity
+        if capacity == -1:
+            self.accumulator = [0] * 50 # Start with an empty list if infinite capacity
         else:
             self.accumulator = [0] * (capacity + 1)  # Times for finite capacity
        

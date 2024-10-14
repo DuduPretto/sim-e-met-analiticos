@@ -54,11 +54,10 @@ class Simulador:
 
             nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
 
-            filaDeDestino = next((queue for queue in self.filas if queue['queueName'] == nomeFilaDestino), None)
-
             if(nomeFilaDestino == -1):
                 self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
             else:
+                filaDeDestino = next((queue for queue in self.filas if queue['queueName'] == nomeFilaDestino), None)
                 self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino = filaDeDestino)
 
             # if len(self.filas) == 1:
@@ -85,21 +84,41 @@ class Simulador:
         
         origem.out()
         if origem.status >= origem.servers:
-            self.escalonador.add(t0=origem.serviceInterval[0], t1=origem.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=origem, filaDestino=destino)
+            aleatorio = self.escalonador.retornaAleatorio()
+
+            probabilidadesRoteamento = self.networkConnections[origem.queueName]
+
+            nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
+
+            if(nomeFilaDestino == -1):
+                self.escalonador.add(t0=origem.serviceInterval[0], t1=origem.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")                
+            else:
+                filaDeDestino = next((queue for queue in self.filas if queue['queueName'] == nomeFilaDestino), None)
+                self.escalonador.add(t0=origem.serviceInterval[0], t1=origem.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=origem, filaDestino = filaDeDestino)
 
         if destino.status < destino.capacity:
             destino.enter()
+            if destino.status <= destino.servers:
+                
+                aleatorio = self.escalonador.retornaAleatorio()
 
-            if destino == self.filas[-1]:
-                if destino.status <= destino.servers:
+                probabilidadesRoteamento = self.networkConnections[destino.queueName]
+
+                nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
+
+                if(nomeFilaDestino == -1):
                     self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
-            elif destino.status <= destino.servers:
-                self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=destino, filaDestino=self.filas[self.filas.index(destino) + 1])
+                else:
+                    filaDeDestino = next((queue for queue in self.filas if queue['queueName'] == nomeFilaDestino), None)
+                    self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=destino, filaDestino = filaDeDestino)
+
         else:
             destino.loss()
 
     def acumulaTempo(self, evento):
         for fila in self.filas:
+            # while len(fila.accumulator) < fila.status:
+            #     fila.accumulator.append(0)
             fila.accumulator[fila.status] += (evento.time - self.tempo_global)
 
     def defineDestino(probabilidades, aleatorio):
