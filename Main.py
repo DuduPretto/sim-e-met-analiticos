@@ -36,7 +36,7 @@ def fileReader():
 
     for queue_name, attributes in data['queues'].items():
         servers = attributes.get('servers')
-        capacity = attributes.get('capacity', -1)  # Default to None if not available
+        capacity = attributes.get('capacity', 999)  # Default to None if not available
         maxArrival = attributes.get('maxArrival', None)
         minArrival = attributes.get('minArrival', None)
         minService = attributes.get('minService')

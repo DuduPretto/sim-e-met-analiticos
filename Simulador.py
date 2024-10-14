@@ -54,10 +54,10 @@ class Simulador:
 
             nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
 
-            if(nomeFilaDestino == -1):
-                self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+            if(nomeFilaDestino == "exit"):
+                self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida", filaOrigem=fila)
             else:
-                filaDeDestino = next((queue for queue in self.filas if queue['queueName'] == nomeFilaDestino), None)
+                filaDeDestino = next((queue for queue in self.filas if queue.queueName == nomeFilaDestino), None)
                 self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino = filaDeDestino)
 
             # if len(self.filas) == 1:
@@ -71,7 +71,7 @@ class Simulador:
 
     def saida(self, evento):
         self.acumulaTempo(evento)
-        fila = self.filas[-1]
+        fila = evento.filaOrigem
         fila.out()
         if fila.status >= fila.servers:
             self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
@@ -90,10 +90,10 @@ class Simulador:
 
             nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
 
-            if(nomeFilaDestino == -1):
-                self.escalonador.add(t0=origem.serviceInterval[0], t1=origem.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")                
+            if(nomeFilaDestino == "exit"):
+                self.escalonador.add(t0=origem.serviceInterval[0], t1=origem.serviceInterval[1], globalTime=self.tempo_global, tipo="saida", filaOrigem=origem)                
             else:
-                filaDeDestino = next((queue for queue in self.filas if queue['queueName'] == nomeFilaDestino), None)
+                filaDeDestino = next((queue for queue in self.filas if queue.queueName == nomeFilaDestino), None)
                 self.escalonador.add(t0=origem.serviceInterval[0], t1=origem.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=origem, filaDestino = filaDeDestino)
 
         if destino.status < destino.capacity:
@@ -106,10 +106,10 @@ class Simulador:
 
                 nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
 
-                if(nomeFilaDestino == -1):
-                    self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+                if(nomeFilaDestino == "exit"):
+                    self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="saida", filaOrigem=destino)
                 else:
-                    filaDeDestino = next((queue for queue in self.filas if queue['queueName'] == nomeFilaDestino), None)
+                    filaDeDestino = next((queue for queue in self.filas if queue.queueName == nomeFilaDestino), None)
                     self.escalonador.add(t0=destino.serviceInterval[0], t1=destino.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=destino, filaDestino = filaDeDestino)
 
         else:
@@ -121,12 +121,12 @@ class Simulador:
             #     fila.accumulator.append(0)
             fila.accumulator[fila.status] += (evento.time - self.tempo_global)
 
-    def defineDestino(probabilidades, aleatorio):
+    def defineDestino(self,probabilidades, aleatorio):
         cumulativo = 0  
         for chave, valor in probabilidades.items():
             cumulativo += valor
             if aleatorio < cumulativo:
                 if chave == "exit":
-                    return -1
+                    return "exit"
                 else:
                     return chave
