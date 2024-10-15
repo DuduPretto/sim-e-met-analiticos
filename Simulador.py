@@ -46,25 +46,25 @@ class Simulador:
         fila = self.filas[0]
         if fila.status < fila.capacity:
             fila.enter()
+            if fila.status <= fila.servers:
+                # Parte nova
+                aleatorio = self.escalonador.retornaAleatorio()
 
-            # Parte nova
-            aleatorio = self.escalonador.retornaAleatorio()
+                probabilidadesRoteamento = self.networkConnections[fila.queueName]
 
-            probabilidadesRoteamento = self.networkConnections[fila.queueName]
+                nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
 
-            nomeFilaDestino = self.defineDestino(probabilidadesRoteamento, aleatorio)
+                if(nomeFilaDestino == "exit"):
+                    self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida", filaOrigem=fila)
+                else:
+                    filaDeDestino = next((queue for queue in self.filas if queue.queueName == nomeFilaDestino), None)
+                    self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino = filaDeDestino)
 
-            if(nomeFilaDestino == "exit"):
-                self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida", filaOrigem=fila)
-            else:
-                filaDeDestino = next((queue for queue in self.filas if queue.queueName == nomeFilaDestino), None)
-                self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino = filaDeDestino)
-
-            # if len(self.filas) == 1:
-            #     if fila.status <= fila.servers:
-            #         self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
-            # elif fila.status <= fila.servers:
-            #     self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino=self.filas[1])
+                # if len(self.filas) == 1:
+                #     if fila.status <= fila.servers:
+                #         self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="saida")
+                # elif fila.status <= fila.servers:
+                #     self.escalonador.add(t0=fila.serviceInterval[0], t1=fila.serviceInterval[1], globalTime=self.tempo_global, tipo="passagem", filaOrigem=fila, filaDestino=self.filas[1])
         else:
             fila.loss()
         self.escalonador.add(t0=fila.arrivalInterval[0], t1=fila.arrivalInterval[1], globalTime=self.tempo_global, tipo="chegada")
